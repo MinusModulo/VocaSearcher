@@ -1,0 +1,1 @@
+# No, I won't publish my scraper code. It's a personal project and I prefer to keep it private.

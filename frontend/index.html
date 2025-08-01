@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VocaSearcher</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #4a90e2, #5c7cfa);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            background-color: #f8f9fa;
+            border: none;
+            font-size: 1.1em;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            color: #495057;
+        }
+
+        .tab:hover {
+            background-color: #e9ecef;
+        }
+
+        .tab.active {
+            background-color: #4a90e2;
+            color: white;
+            box-shadow: 0 -3px 0 #2980b9;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .search-form {
+            background-color: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border: 1px solid #e9ecef;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus, select:focus {
+            border-color: #4a90e2;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #4a90e2, #5c7cfa);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+        }
+
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #6c757d, #495057);
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+        }
+
+        .results {
+            margin-top: 30px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            font-size: 1.1em;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #f5c6cb;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #c3e6cb;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background-color: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .song-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .song-info {
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+
+        .lyrics-line {
+            padding: 8px 0;
+            border-bottom: 1px solid #f8f9fa;
+        }
+
+        .lyrics-line:last-child {
+            border-bottom: none;
+        }
+
+        .line-number {
+            display: inline-block;
+            width: 40px;
+            font-weight: 600;
+            color: #4a90e2;
+        }
+
+        .japanese {
+            font-size: 1.1em;
+            margin-bottom: 3px;
+        }
+
+        .romaji {
+            font-size: 0.9em;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 30px;
+            padding: 20px;
+            flex-wrap: wrap;
+        }
+
+        .page-btn {
+            padding: 10px 16px;
+            border: 1px solid #4a90e2;
+            background-color: white;
+            color: #4a90e2;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+            font-weight: 500;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background-color: #4a90e2;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background-color: #f8f9fa;
+            color: #6c757d;
+            border-color: #e9ecef;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .page-btn.first-page {
+            background-color: #e3f2fd;
+            color: #1976d2;
+            border-color: #bbdefb;
+        }
+
+        .page-btn.first-page:hover:not(:disabled) {
+            background-color: #1976d2;
+            color: white;
+        }
+
+        .page-info {
+            margin: 0 12px;
+            font-weight: 600;
+            color: #495057;
+            padding: 10px 16px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+            font-size: 0.9em;
+        }
+
+        .word-selection {
+            background-color: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .word-option {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .word-option:hover {
+            border-color: #4a90e2;
+            background-color: #f8f9fa;
+        }
+
+        .word-option.selected {
+            border-color: #4a90e2;
+            background-color: #e3f2fd;
+        }
+
+        .word-lemma {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .word-count {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            font-size: 1.1em;
+        }
+
+        @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
+            }
+
+            .form-row {
+                flex-direction: column;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .container {
+                margin: 10px;
+            }
+
+            body {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 VocaSearcher</h1>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('lyrics-search')">模糊搜索歌词</button>
+            <button class="tab" onclick="switchTab('song-lyrics')">根据歌名获取歌词</button>
+            <button class="tab" onclick="switchTab('verb-search')">搜索包含单词的歌曲</button>
+        </div>
+
+        <!-- 模糊搜索歌词 -->
+        <div id="lyrics-search" class="tab-content active">
+            <div class="search-form">
+                <div class="form-group">
+                    <label for="lyrics-text">搜索文本：</label>
+                    <input type="text" id="lyrics-text" placeholder="输入要搜索的歌词内容...">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="lyrics-limit">每页显示数量：</label>
+                        <input type="number" id="lyrics-limit" value="10" min="1" max="50">
+                    </div>
+                </div>
+                <button class="btn" onclick="searchLyrics(0)">搜索歌词</button>
+            </div>
+            <div id="lyrics-results" class="results"></div>
+            <div id="lyrics-pagination" class="pagination" style="display: none;"></div>
+        </div>
+
+        <!-- 根据歌名获取歌词 -->
+        <div id="song-lyrics" class="tab-content">
+            <div class="search-form">
+                <div class="form-group">
+                    <label for="song-title">歌曲标题：</label>
+                    <input type="text" id="song-title" placeholder="输入歌曲标题...">
+                </div>
+                <button class="btn" onclick="searchSongsByTitle()">搜索歌曲</button>
+            </div>
+            <div id="song-selection" style="display: none;">
+                <h3>选择歌曲：</h3>
+                <div id="song-list"></div>
+            </div>
+            <div id="song-lyrics-results" class="results"></div>
+        </div>
+
+        <!-- 搜索包含动词的歌曲 -->
+        <div id="verb-search" class="tab-content">
+            <div class="search-form">
+                <div class="form-group">
+                    <label for="verb-text">动词：</label>
+                    <input type="text" id="verb-text" placeholder="输入动词...">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="verb-limit">每页显示数量：</label>
+                        <input type="number" id="verb-limit" value="10" min="1" max="50">
+                    </div>
+                </div>
+                <button class="btn" onclick="searchWordsByVerb()">搜索相关词汇</button>
+            </div>
+            
+            <div id="word-selection" class="word-selection" style="display: none;">
+                <h3>选择词汇：</h3>
+                <div id="word-list"></div>
+                <button class="btn" onclick="searchSongsBySelectedWord(0)" id="search-songs-btn" style="display: none;">搜索包含此词汇的歌曲</button>
+            </div>
+            
+            <div id="verb-results" class="results"></div>
+            <div id="verb-pagination" class="pagination" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000';
+        
+        let currentLyricsPage = 0;
+        let currentVerbPage = 0;
+        let selectedWord = null;
+        let currentSearchParams = {};
+
+        // 切换标签
+        function switchTab(tabId) {
+            // 隐藏所有标签内容
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 移除所有标签的active类
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 显示选中的标签内容
+            document.getElementById(tabId).classList.add('active');
+            
+            // 添加active类到对应的标签按钮
+            event.target.classList.add('active');
+        }
+
+        // 显示加载状态
+        function showLoading(containerId) {
+            document.getElementById(containerId).innerHTML = 
+                '<div class="loading">🔍 搜索中...</div>';
+        }
+
+        // 显示错误信息
+        function showError(containerId, message) {
+            document.getElementById(containerId).innerHTML = 
+                `<div class="error">❌ ${message}</div>`;
+        }
+
+        // 显示成功信息
+        function showSuccess(containerId, message) {
+            document.getElementById(containerId).innerHTML = 
+                `<div class="success">✅ ${message}</div>`;
+        }
+
+        // 1. 模糊搜索歌词
+        async function searchLyrics(page = 0) {
+            const text = document.getElementById('lyrics-text').value.trim();
+            const limit = parseInt(document.getElementById('lyrics-limit').value);
+            
+            if (!text) {
+                showError('lyrics-results', '请输入要搜索的文本');
+                return;
+            }
+
+            currentLyricsPage = page;
+            currentSearchParams.lyrics = { text, limit };
+            
+            showLoading('lyrics-results');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/search/lyrics?text=${encodeURIComponent(text)}&limit=${limit}&offset=${page * limit}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayLyricsResults(data.data);
+                    updateLyricsPagination(data.count, limit, page);
+                } else {
+                    showError('lyrics-results', data.error || '搜索失败');
+                }
+            } catch (error) {
+                showError('lyrics-results', '网络错误，请检查API服务是否运行');
+            }
+        }
+
+        function displayLyricsResults(results) {
+            const container = document.getElementById('lyrics-results');
+            
+            if (results.length === 0) {
+                container.innerHTML = '<div class="no-results">😔 没有找到相关歌词</div>';
+                return;
+            }
+
+            let html = `<h3>找到 ${results.length} 条歌词：</h3>`;
+            results.forEach(lyric => {
+                html += `
+                    <div class="card">
+                        <div class="song-info">歌曲ID: ${lyric.song_id} | 第 ${lyric.line_number} 行</div>
+                        <div class="lyrics-line">
+                            <div class="japanese">${lyric.japanese}</div>
+                            <div class="romaji">${lyric.romaji || ''}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function updateLyricsPagination(count, limit, currentPage) {
+            const pagination = document.getElementById('lyrics-pagination');
+            
+            // 如果当前页没有结果，或者结果数量小于限制，说明这是最后一页
+            const hasNextPage = count >= limit;
+            const hasPrevPage = currentPage > 0;
+            
+            if (!hasNextPage && !hasPrevPage) {
+                pagination.style.display = 'none';
+                return;
+            }
+            
+            pagination.style.display = 'flex';
+            
+            let html = '';
+            
+            // 首页按钮
+            if (currentPage > 1) {
+                html += `<button class="page-btn first-page" onclick="searchLyrics(0)">🏠 首页</button>`;
+            }
+            
+            // 上一页按钮
+            html += `<button class="page-btn" onclick="searchLyrics(${Math.max(0, currentPage - 1)})" ${!hasPrevPage ? 'disabled' : ''}>⬅ 上一页</button>`;
+            
+            // 页面信息
+            html += `<span class="page-info">第 ${currentPage + 1} 页 ${hasNextPage ? '(还有更多)' : '(最后一页)'}</span>`;
+            
+            // 下一页按钮
+            html += `<button class="page-btn" onclick="searchLyrics(${currentPage + 1})" ${!hasNextPage ? 'disabled' : ''}>下一页 ➡</button>`;
+            
+            pagination.innerHTML = html;
+        }
+
+        // 2. 根据歌名获取歌词
+        async function searchSongsByTitle() {
+            const title = document.getElementById('song-title').value.trim();
+            
+            if (!title) {
+                showError('song-lyrics-results', '请输入歌曲标题');
+                return;
+            }
+            
+            showLoading('song-lyrics-results');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/search/songs?title=${encodeURIComponent(title)}&limit=20`);
+                const data = await response.json();
+                
+                if (data.success && data.data.length > 0) {
+                    displaySongSelection(data.data);
+                    document.getElementById('song-lyrics-results').innerHTML = '';
+                } else {
+                    showError('song-lyrics-results', '没有找到相关歌曲');
+                    document.getElementById('song-selection').style.display = 'none';
+                }
+            } catch (error) {
+                showError('song-lyrics-results', '网络错误，请检查API服务是否运行');
+            }
+        }
+
+        function displaySongSelection(songs) {
+            const container = document.getElementById('song-list');
+            const selection = document.getElementById('song-selection');
+            
+            let html = '';
+            songs.forEach(song => {
+                html += `
+                    <div class="card" onclick="getSongLyrics(${song.id})">
+                        <div class="song-title">${song.original_title}</div>
+                        <div class="song-info">
+                            歌手: ${song.singer} | 
+                            上传日期: ${song.upload_date} | 
+                            观看次数: ${song.views?.toLocaleString() || 'N/A'}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            selection.style.display = 'block';
+        }
+
+        async function getSongLyrics(songId) {
+            showLoading('song-lyrics-results');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/lyrics/${songId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displaySongLyrics(data.data, songId);
+                } else {
+                    showError('song-lyrics-results', '获取歌词失败');
+                }
+            } catch (error) {
+                showError('song-lyrics-results', '网络错误，请检查API服务是否运行');
+            }
+        }
+
+        function displaySongLyrics(lyrics, songId) {
+            const container = document.getElementById('song-lyrics-results');
+            
+            if (lyrics.length === 0) {
+                container.innerHTML = '<div class="no-results">😔 该歌曲暂无歌词</div>';
+                return;
+            }
+
+            let html = `<h3>歌曲 ID ${songId} 的歌词：</h3>`;
+            html += '<div class="card">';
+            
+            lyrics.forEach(line => {
+                html += `
+                    <div class="lyrics-line">
+                        <span class="line-number">${line.line_number}</span>
+                        <div class="japanese">${line.japanese}</div>
+                        <div class="romaji">${line.romaji || ''}</div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // 3. 搜索包含动词的歌曲
+        async function searchWordsByVerb() {
+            const verb = document.getElementById('verb-text').value.trim();
+            
+            if (!verb) {
+                showError('verb-results', '请输入动词');
+                return;
+            }
+            
+            // 重置状态
+            selectedWord = null;
+            document.getElementById('word-selection').style.display = 'none';
+            document.getElementById('verb-results').innerHTML = '';
+            document.getElementById('verb-pagination').style.display = 'none';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/search/raw-word?raw_word=${encodeURIComponent(verb)}&limit=10`);
+                const data = await response.json();
+                
+                if (data.success && data.data.length > 0) {
+                    displayWordSelection(data.data);
+                } else {
+                    showError('verb-results', '没有找到相关词汇');
+                }
+            } catch (error) {
+                showError('verb-results', '网络错误，请检查API服务是否运行');
+            }
+        }
+
+        function displayWordSelection(words) {
+            const container = document.getElementById('word-list');
+            const selection = document.getElementById('word-selection');
+            
+            let html = '';
+            words.forEach(word => {
+                html += `
+                    <div class="word-option" onclick="selectWord('${word.lemma}', ${word.id})">
+                        <div class="word-lemma">${word.lemma}</div>
+                        <div class="word-count">出现在 ${word.song_count} 首歌曲中</div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            selection.style.display = 'block';
+        }
+
+        function selectWord(lemma, wordId) {
+            // 移除之前的选择
+            document.querySelectorAll('.word-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // 添加选择状态
+            event.currentTarget.classList.add('selected');
+            
+            selectedWord = { lemma, id: wordId };
+            document.getElementById('search-songs-btn').style.display = 'inline-block';
+        }
+
+        async function searchSongsBySelectedWord(page = 0) {
+            if (!selectedWord) {
+                showError('verb-results', '请先选择一个词汇');
+                return;
+            }
+            
+            const limit = parseInt(document.getElementById('verb-limit').value);
+            currentVerbPage = page;
+            currentSearchParams.verb = { word: selectedWord.lemma, limit };
+            
+            showLoading('verb-results');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/search/word?word=${encodeURIComponent(selectedWord.lemma)}&limit=${limit}&offset=${page * limit}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayVerbResults(data.data);
+                    updateVerbPagination(data.count, limit, page);
+                } else {
+                    showError('verb-results', data.error || '搜索失败');
+                }
+            } catch (error) {
+                showError('verb-results', '网络错误，请检查API服务是否运行');
+            }
+        }
+
+        function displayVerbResults(results) {
+            const container = document.getElementById('verb-results');
+            
+            if (results.length === 0) {
+                container.innerHTML = '<div class="no-results">😔 没有找到包含该词汇的歌曲</div>';
+                return;
+            }
+
+            let html = `<h3>找到 ${results.length} 首包含词汇 "${selectedWord.lemma}" 的歌曲：</h3>`;
+            
+            results.forEach(result => {
+                const song = result.song_info;
+                if (song) {
+                    html += `
+                        <div class="card" onclick="showLyricsContext(${song.id}, ${result.lyric_id})" style="cursor: pointer;">
+                            <div class="song-title">${song.original_title} <span style="font-size: 0.8em; color: #6c757d;">📖 点击查看歌词</span></div>
+                            <div class="song-info">
+                                歌手: ${song.singer} | 
+                                上传日期: ${song.upload_date} | 
+                                观看次数: ${song.views?.toLocaleString() || 'N/A'}
+                            </div>
+                            <div style="margin-top: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
+                                <strong>词汇信息:</strong> 
+                                表面形式: ${result.surface} | 
+                                读音: ${result.reading_form} | 
+                                位置: 第 ${result.word_number} 个词
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function updateVerbPagination(count, limit, currentPage) {
+            const pagination = document.getElementById('verb-pagination');
+            
+            // 如果当前页没有结果，或者结果数量小于限制，说明这是最后一页
+            const hasNextPage = count >= limit;
+            const hasPrevPage = currentPage > 0;
+            
+            if (!hasNextPage && !hasPrevPage) {
+                pagination.style.display = 'none';
+                return;
+            }
+            
+            pagination.style.display = 'flex';
+            
+            let html = '';
+            
+            // 首页按钮
+            if (currentPage > 1) {
+                html += `<button class="page-btn first-page" onclick="searchSongsBySelectedWord(0)">🏠 首页</button>`;
+            }
+            
+            // 上一页按钮
+            html += `<button class="page-btn" onclick="searchSongsBySelectedWord(${Math.max(0, currentPage - 1)})" ${!hasPrevPage ? 'disabled' : ''}>⬅ 上一页</button>`;
+            
+            // 页面信息
+            html += `<span class="page-info">第 ${currentPage + 1} 页 ${hasNextPage ? '(还有更多)' : '(最后一页)'}</span>`;
+            
+            // 下一页按钮
+            html += `<button class="page-btn" onclick="searchSongsBySelectedWord(${currentPage + 1})" ${!hasNextPage ? 'disabled' : ''}>下一页 ➡</button>`;
+            
+            pagination.innerHTML = html;
+        }
+
+        // 显示歌词上下文
+        async function showLyricsContext(songId, targetLyricId) {
+            // 创建模态框
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.7);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+                padding: 20px;
+                box-sizing: border-box;
+            `;
+            
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = `
+                background: white;
+                border-radius: 15px;
+                padding: 30px;
+                max-width: 800px;
+                max-height: 80vh;
+                overflow-y: auto;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                position: relative;
+            `;
+            
+            modalContent.innerHTML = '<div style="text-align: center; padding: 40px; color: #6c757d;">🔍 加载歌词中...</div>';
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+            
+            // 点击模态框外部关闭
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    document.body.removeChild(modal);
+                }
+            });
+            
+            try {
+                // 首先获取目标歌词行的信息
+                const targetResponse = await fetch(`${API_BASE_URL}/api/lyric/${targetLyricId}`);
+                const targetData = await targetResponse.json();
+                
+                if (!targetData.success) {
+                    modalContent.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <h3>😔 未找到目标歌词行</h3>
+                            <p style="color: #6c757d; margin: 10px 0;">歌词ID: ${targetLyricId}</p>
+                            <button onclick="document.body.removeChild(this.closest('[style*=fixed]'))" 
+                                    style="margin-top: 20px; padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                                关闭
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const targetLyric = targetData.data;
+                
+                // 使用目标歌词的真实song_id获取完整歌词
+                const actualSongId = targetLyric.song_id;
+                const response = await fetch(`${API_BASE_URL}/api/lyrics/${actualSongId}`);
+                const data = await response.json();
+                
+                if (data.success && data.data.length > 0) {
+                    displayLyricsInModal(modalContent, data.data, targetLyricId, actualSongId, targetLyric);
+                } else {
+                    modalContent.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <h3>😔 该歌曲暂无歌词</h3>
+                            <button onclick="document.body.removeChild(this.closest('[style*=fixed]'))" 
+                                    style="margin-top: 20px; padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                                关闭
+                            </button>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('获取歌词失败:', error);
+                modalContent.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <h3>❌ 获取歌词失败</h3>
+                        <p style="color: #6c757d; margin: 10px 0;">网络错误，请检查API服务是否运行</p>
+                        <button onclick="document.body.removeChild(this.closest('[style*=fixed]'))" 
+                                style="margin-top: 20px; padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            关闭
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function displayLyricsInModal(container, lyrics, targetLyricId, songId, targetLyric) {
+            // 找到目标歌词的索引
+            const targetIndex = lyrics.findIndex(lyric => lyric.id === targetLyricId);
+            
+            let html = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #e9ecef; padding-bottom: 15px;">
+                    <h3 style="margin: 0; color: #2c3e50;">🎵 歌曲 ID ${songId} 的歌词</h3>
+                    <button onclick="document.body.removeChild(this.closest('[style*=fixed]'))" 
+                            style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 0.9em;">
+                        ✕ 关闭
+                    </button>
+                </div>
+            `;
+            
+            if (targetIndex === -1) {
+                // 如果在当前歌曲的歌词中找不到目标行，显示目标歌词信息
+                html += `
+                    <div style="text-align: center; padding: 20px; border: 2px solid #ffc107; border-radius: 8px; background-color: #fff3cd; margin-bottom: 20px;">
+                        <h4 style="color: #856404; margin-bottom: 15px;">⚠️ 目标歌词来自不同歌曲</h4>
+                        <div style="font-family: monospace; font-size: 1.1em; color: #2c3e50; margin-bottom: 10px;">
+                            "${targetLyric ? targetLyric.japanese : '未知歌词'}"
+                        </div>
+                        <div style="font-size: 0.9em; color: #6c757d;">
+                            目标歌词ID: ${targetLyricId} | 来源歌曲ID: ${targetLyric ? targetLyric.song_id : '未知'}
+                        </div>
+                    </div>
+                `;
+                
+                // 显示当前歌曲的所有歌词作为参考
+                html += '<h4 style="color: #2c3e50; border-bottom: 1px solid #e9ecef; padding-bottom: 10px;">当前歌曲的完整歌词：</h4>';
+                html += '<div style="font-family: monospace; line-height: 1.8;">';
+                
+                lyrics.forEach((lyric, index) => {
+                    html += `
+                        <div style="
+                            padding: 8px 12px; 
+                            margin: 4px 0; 
+                            border-radius: 5px; 
+                            border-left: 3px solid #e9ecef;
+                            background-color: #f8f9fa;
+                        ">
+                            <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                                <span style="
+                                    background: #6c757d; 
+                                    color: white; 
+                                    padding: 2px 6px; 
+                                    border-radius: 3px; 
+                                    font-size: 0.7em; 
+                                    font-weight: 600;
+                                    margin-right: 8px;
+                                    min-width: 25px;
+                                    text-align: center;
+                                ">
+                                    ${lyric.line_number}
+                                </span>
+                            </div>
+                            <div style="font-size: 1em; color: #495057; margin-bottom: 3px;">
+                                ${lyric.japanese}
+                            </div>
+                            ${lyric.romaji ? `
+                                <div style="font-size: 0.8em; color: #6c757d; font-style: italic; margin-left: 33px;">
+                                    ${lyric.romaji}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+            } else {
+                // 正常显示上下文（找到了目标歌词行）
+                const contextRange = 3;
+                const startIndex = Math.max(0, targetIndex - contextRange);
+                const endIndex = Math.min(lyrics.length - 1, targetIndex + contextRange);
+                
+                html += '<div style="font-family: monospace; line-height: 1.8;">';
+                
+                for (let i = startIndex; i <= endIndex; i++) {
+                    const lyric = lyrics[i];
+                    const isTarget = lyric.id === targetLyricId;
+                    
+                    html += `
+                        <div style="
+                            padding: 12px 16px; 
+                            margin: 8px 0; 
+                            border-radius: 8px; 
+                            border-left: 4px solid ${isTarget ? '#4a90e2' : '#e9ecef'};
+                            background-color: ${isTarget ? '#e3f2fd' : '#f8f9fa'};
+                            ${isTarget ? 'box-shadow: 0 2px 8px rgba(74, 144, 226, 0.2);' : ''}
+                        ">
+                            <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                                <span style="
+                                    background: ${isTarget ? '#4a90e2' : '#6c757d'}; 
+                                    color: white; 
+                                    padding: 4px 8px; 
+                                    border-radius: 4px; 
+                                    font-size: 0.8em; 
+                                    font-weight: 600;
+                                    margin-right: 12px;
+                                    min-width: 30px;
+                                    text-align: center;
+                                ">
+                                    ${lyric.line_number}
+                                </span>
+                                ${isTarget ? '<span style="background: #ff9800; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.7em; font-weight: 600;">目标行</span>' : ''}
+                            </div>
+                            <div style="
+                                font-size: ${isTarget ? '1.2em' : '1.1em'}; 
+                                font-weight: ${isTarget ? '600' : '500'}; 
+                                color: ${isTarget ? '#2c3e50' : '#495057'};
+                                margin-bottom: 4px;
+                            ">
+                                ${lyric.japanese}
+                            </div>
+                            ${lyric.romaji ? `
+                                <div style="
+                                    font-size: 0.9em; 
+                                    color: #6c757d; 
+                                    font-style: italic;
+                                    margin-left: 46px;
+                                ">
+                                    ${lyric.romaji}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+                
+                html += '</div>';
+                
+                // 添加说明
+                html += `
+                    <div style="
+                        margin-top: 20px; 
+                        padding: 15px; 
+                        background-color: #fff3cd; 
+                        border: 1px solid #ffeaa7; 
+                        border-radius: 8px; 
+                        font-size: 0.9em; 
+                        color: #856404;
+                    ">
+                        <strong>💡 说明：</strong> 高亮显示的是包含搜索词汇的歌词行，上下显示了 ${contextRange} 行上下文。
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('SongScraper 前端已加载');
+        });
+    </script>
+</body>
+</html>
